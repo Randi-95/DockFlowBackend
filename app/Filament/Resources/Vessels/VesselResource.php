@@ -21,7 +21,7 @@ class VesselResource extends Resource
     protected static ?string $model = Vessel::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-paper-airplane';
-    protected static \UnitEnum|string|null $navigationGroup = 'Operasional';
+    protected static \UnitEnum|string|null $navigationGroup = 'Master Data';
 
     public static function form(Schema $schema): Schema
     {

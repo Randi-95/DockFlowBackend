@@ -1,44 +1,57 @@
 <?php
 
-namespace App\Filament\Resources\Attendances;
+namespace App\Filament\Resources\Bookings;
 
-use App\Filament\Resources\Attendances\Pages\ManageAttendances;
-use App\Models\Attendance;
+use App\Filament\Resources\Bookings\Pages\ManageBookings;
+use App\Models\Booking;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class AttendanceResource extends Resource
+class BookingResource extends Resource
 {
-    protected static ?string $model = Attendance::class;
+    protected static ?string $model = Booking::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-check-badge';
-    protected static \UnitEnum|string|null $navigationGroup = 'User Management';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
+    protected static \UnitEnum|string|null $navigationGroup = 'Transcation';
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
+                TextInput::make('booking_number')
+                    ->required(),
                 Select::make('user_id')
                     ->relationship('user', 'name')
                     ->required(),
-                DatePicker::make('date')
+                Select::make('vessel_id')
+                    ->relationship('vessel', 'name')
                     ->required(),
-                DateTimePicker::make('check_in')
+                TextInput::make('dock_location'),
+                DateTimePicker::make('estimated_delivery_date')
                     ->required(),
-                DateTimePicker::make('check_out'),
+                TextInput::make('total_estimated_price')
+                    ->required()
+                    ->numeric()
+                    ->prefix('$'),
                 Select::make('status')
-                    ->options(['present' => 'Present', 'late' => 'Late', 'absent' => 'Absent'])
+                    ->options([
+                        'waiting' => 'Waiting',
+                        'confirmed' => 'Confirmed',
+                        'processing' => 'Processing',
+                        'completed' => 'Completed',
+                        'cancelled' => 'Cancelled',
+                    ])
                     ->required(),
             ]);
     }
@@ -47,16 +60,19 @@ class AttendanceResource extends Resource
     {
         return $table
             ->columns([
+                TextColumn::make('booking_number')
+                    ->searchable(),
                 TextColumn::make('user.name')
                     ->searchable(),
-                TextColumn::make('date')
-                    ->date()
-                    ->sortable(),
-                TextColumn::make('check_in')
+                TextColumn::make('vessel.name')
+                    ->searchable(),
+                TextColumn::make('dock_location')
+                    ->searchable(),
+                TextColumn::make('estimated_delivery_date')
                     ->dateTime()
                     ->sortable(),
-                TextColumn::make('check_out')
-                    ->dateTime()
+                TextColumn::make('total_estimated_price')
+                    ->money()
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge(),
@@ -73,7 +89,7 @@ class AttendanceResource extends Resource
                 //
             ])
             ->recordActions([
-                // EditAction::make(),
+                EditAction::make(),
                 // DeleteAction::make(),
             ])
             ->toolbarActions([
@@ -86,7 +102,7 @@ class AttendanceResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageAttendances::route('/'),
+            'index' => ManageBookings::route('/'),
         ];
     }
 }
