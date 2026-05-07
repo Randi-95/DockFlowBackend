@@ -35,8 +35,10 @@ class AttendanceResource extends Resource
                 DatePicker::make('date')
                     ->required(),
                 DateTimePicker::make('check_in')
+                    ->timezone('Asia/Jakarta')
                     ->required(),
-                DateTimePicker::make('check_out'),
+                DateTimePicker::make('check_out')
+                    ->timezone('Asia/Jakarta'),
                 Select::make('status')
                     ->options(['present' => 'Present', 'late' => 'Late', 'absent' => 'Absent'])
                     ->required(),
@@ -54,9 +56,11 @@ class AttendanceResource extends Resource
                     ->sortable(),
                 TextColumn::make('check_in')
                     ->dateTime()
+                    ->timezone('Asia/Jakarta')
                     ->sortable(),
                 TextColumn::make('check_out')
                     ->dateTime()
+                    ->timezone('Asia/Jakarta')
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge(),
@@ -74,7 +78,7 @@ class AttendanceResource extends Resource
             ])
             ->recordActions([
                 // EditAction::make(),
-                // DeleteAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
