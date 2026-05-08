@@ -11,12 +11,16 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
+use Laravel\Sanctum\HasApiTokens;
+
 #[Fillable(['employee_id', 'role', 'rfid_uid', 'is_active', 'name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     /**
      * Get the attributes that should be cast.
@@ -39,5 +43,10 @@ class User extends Authenticatable
     public function bookings(): HasMany
     {
         return $this->hasMany(Booking::class);
+    }   
+
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->role === 'warehouse_admin';
     }
 }
