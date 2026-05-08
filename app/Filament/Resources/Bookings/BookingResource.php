@@ -5,10 +5,11 @@ namespace App\Filament\Resources\Bookings;
 use App\Filament\Resources\Bookings\Pages\ManageBookings;
 use App\Models\Booking;
 use BackedEnum;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\Action;
 use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -89,6 +90,20 @@ class BookingResource extends Resource
                 //
             ])
             ->recordActions([
+                Action::make('confirm')
+                    ->label('Confirm')
+                    ->color('success')
+                    ->icon('heroicon-o-check-circle')
+                    ->action(fn(Booking $record) => $record->update(['status' => 'confirmed']))
+                    ->requiresConfirmation()
+                    ->visible(fn(Booking $record) => $record->status === 'waiting'),
+                Action::make('process')
+                    ->label('Process')
+                    ->color('warning')
+                    ->icon('heroicon-o-arrow-path')
+                    ->action(fn(Booking $record) => $record->update(['status' => 'processing']))
+                    ->requiresConfirmation()
+                    ->visible(fn(Booking $record) => $record->status === 'confirmed'),
                 EditAction::make(),
                 // DeleteAction::make(),
             ])
