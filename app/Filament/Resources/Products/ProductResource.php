@@ -9,6 +9,7 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Illuminate\Database\Eloquent\Collection;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -64,6 +65,10 @@ class ProductResource extends Resource
                     ->searchable(),
                 TextColumn::make('sku_code')
                     ->searchable(),
+                ImageColumn::make('barcode')
+                    ->label('Barcode')
+                    ->width(200)
+                    ->height(50),
                 TextColumn::make('name')
                     ->searchable(),
                 ImageColumn::make('image_url')->label('Image'),
@@ -94,8 +99,16 @@ class ProductResource extends Resource
                 DeleteAction::make(),
             ])
             ->toolbarActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
+                \Filament\Actions\BulkActionGroup::make([
+                    \Filament\Actions\DeleteBulkAction::make(),
+                    \Filament\Actions\BulkAction::make('print_barcodes')
+                        ->label('Print Barcodes')
+                        ->icon('heroicon-o-printer')
+                        ->action(function (Collection $records) {
+                            $ids = $records->pluck('id')->join(',');
+                            return redirect()->route('products.print-barcodes', ['ids' => $ids]);
+                        })
+                        ->openUrlInNewTab(),
                 ]),
             ]);
     }

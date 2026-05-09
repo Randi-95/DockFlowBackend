@@ -12,3 +12,9 @@ Route::get('/attendance', function () {
 });
 
 Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
+
+Route::get('/admin/products/print-barcodes', function (\Illuminate\Http\Request $request) {
+    $ids = explode(',', $request->query('ids', ''));
+    $products = \App\Models\Product::whereIn('id', $ids)->get();
+    return view('products.print-barcodes', compact('products'));
+})->name('products.print-barcodes')->middleware('auth');
