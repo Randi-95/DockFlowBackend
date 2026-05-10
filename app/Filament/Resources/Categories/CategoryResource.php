@@ -9,10 +9,12 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -29,7 +31,11 @@ class CategoryResource extends Resource
             ->components([
                 TextInput::make('name')
                     ->required(),
-                TextInput::make('icon_name'),
+                FileUpload::make('icon_name')
+                    ->label('Image')
+                    ->image()
+                    ->directory('categories')
+                    ->required(),
             ]);
     }
 
@@ -39,8 +45,10 @@ class CategoryResource extends Resource
             ->columns([
                 TextColumn::make('name')
                     ->searchable(),
-                TextColumn::make('icon_name')
-                    ->searchable(),
+                ImageColumn::make('icon_name')
+                    ->label('Categories')
+                    ->width(200)
+                    ->height(50),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
