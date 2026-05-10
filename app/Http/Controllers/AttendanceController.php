@@ -93,14 +93,14 @@ class AttendanceController extends Controller
 
         $totalDayWork = $now;
         $totalPresent = Attendance::where('user_id', $user->id)->where('status', 'present')->count();
-        $totalLate = Attendance::where('user_id', $user->id)->where('status',  'late')->count();
+        $totalLate = Attendance::where('user_id', $user->id)->where('status', 'late')->count();
         $totalAbsent = Attendance::where('user_id', $user->id)->where('status', 'absent')->count();
         $present = $totalPresent + $totalLate;
-        $percentage = ($present / $totalDayWork) * 100;
+        $percentage = ($totalDayWork > 0) ? ($present / $totalDayWork) : 0;
 
         return response()->json([
             'status' => true,
-            'message' => 'Succes Get Stats Attendance', 
+            'message' => 'Succes Get Stats Attendance',
             'totalPresent' => $totalPresent,
             'totalLate' => $totalLate,
             'totalAbsent' => $totalAbsent,
