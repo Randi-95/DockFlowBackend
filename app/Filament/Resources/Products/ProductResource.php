@@ -41,6 +41,7 @@ class ProductResource extends Resource
                 FileUpload::make('image_url')
                     ->label('Image')
                     ->image()
+                    ->disk('public')
                     ->directory('products')
                     ->required(),
                 TextInput::make('stock_qty')

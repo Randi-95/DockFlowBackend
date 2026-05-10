@@ -34,6 +34,7 @@ class CategoryResource extends Resource
                 FileUpload::make('icon_name')
                     ->label('Image')
                     ->image()
+                    ->disk('public')
                     ->directory('categories')
                     ->required(),
             ]);
