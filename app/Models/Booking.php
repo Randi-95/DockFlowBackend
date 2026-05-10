@@ -16,6 +16,7 @@ class Booking extends Model
         'estimated_delivery_date',
         'total_estimated_price',
         'status',
+        'created_at'
     ];
 
     public function user(): BelongsTo

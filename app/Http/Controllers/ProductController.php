@@ -48,13 +48,11 @@ class ProductController extends Controller
     }
 
     public function getInventoryData(Request $request){
-        // Get statistics
         $totalStock = Product::all()->sum('stock_qty');
         $totalItem = Product::count();
         $lowStockProduct = Product::where('stock_qty', '<', 10)->count();
-        $inOrderProduct = 0; // Bisa disesuaikan dengan logika booking
+        $inOrderProduct = 0; 
 
-        // Get categories with product count
         $categories = Category::withCount('products')->get()->map(function($category){
             return [
                 'id' => $category->id,
@@ -64,7 +62,6 @@ class ProductController extends Controller
             ];
         });
 
-        // Get products with filters
         $products = Product::with('category')
             ->when($request->category_id, function($query, $categoryId){
                 return $query->where('category_id', $categoryId);

@@ -68,11 +68,16 @@ class ProductResource extends Resource
                     ->searchable(),
                 ImageColumn::make('barcode')
                     ->label('Barcode')
+                    ->disk('public')
                     ->width(200)
                     ->height(50),
                 TextColumn::make('name')
                     ->searchable(),
-                ImageColumn::make('image_url')->label('Image'),
+                ImageColumn::make('image_url')
+                    ->disk('public')
+                    ->width(200)
+                    ->height(50)
+                    ->label('Image'),
                 TextColumn::make('stock_qty')
                     ->numeric()
                     ->sortable(),

@@ -47,7 +47,8 @@ class CategoryResource extends Resource
                 TextColumn::make('name')
                     ->searchable(),
                 ImageColumn::make('icon_name')
-                    ->label('Categories')
+                    ->label('Image Icon')
+                    ->disk('public')
                     ->width(200)
                     ->height(50),
                 TextColumn::make('created_at')

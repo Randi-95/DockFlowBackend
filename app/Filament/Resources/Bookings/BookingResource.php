@@ -105,7 +105,7 @@ class BookingResource extends Resource
                     ->requiresConfirmation()
                     ->visible(fn(Booking $record) => $record->status === 'confirmed'),
                 EditAction::make(),
-                // DeleteAction::make(),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
