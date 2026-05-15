@@ -55,7 +55,7 @@ class BookingController extends Controller
             'cancelled' => Booking::where('user_id', $user->id)->where('status', 'cancelled')->count(),
         ];
 
-        $query = Booking::with(['vessel', 'bookingDetails'])
+        $query = Booking::with(['vessel', 'bookingDetails.product'])
             ->where('user_id', $user->id);
 
         if ($request->has('status') && in_array($request->status, ['waiting', 'confirmed', 'processing', 'completed', 'cancelled'])) {
@@ -90,6 +90,14 @@ class BookingController extends Controller
                 'items_count' => $booking->bookingDetails->count(),
                 'barcode_url' => $booking->barcode ? asset('storage/' . $booking->barcode) : null,
                 'dock_location' => $booking->dock_location,
+                'items' => $booking->bookingDetails->map(function($detail) {
+                    return [
+                        'product_name' => $detail->product->name,
+                        'qty' => $detail->qty,
+                        'price' => $detail->price_at_booking,
+                        'image_url' => $detail->product->image ? asset('storage/' . $detail->product->image) : null,
+                    ];
+                })->toArray(),
             ];
         });
 
