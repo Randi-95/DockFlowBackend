@@ -21,6 +21,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Booking
     Route::get('/booking-active', [BookingController::class, 'getBookingActive']);
     Route::get('/booking-history', [BookingController::class, 'getHistory']);
+    Route::post('/checkout', [BookingController::class, 'checkout']);
+
+    // Vessel
+    Route::get('/vessels', [BookingController::class, 'getVessels']);
 
     // Attendance
     Route::get('/get-statistik', [AttendanceController::class, 'statsAttendance']);
