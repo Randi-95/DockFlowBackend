@@ -8,6 +8,8 @@ use App\Models\Vessel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Picqer\Barcode\BarcodeGeneratorPNG;
 
 class BookingController extends Controller
 {
@@ -151,8 +153,36 @@ class BookingController extends Controller
 
             $bookingNumber = 'BK-' . date('YmdHis') . rand(1000, 9999);
 
+            $generator = new BarcodeGeneratorPNG();
+            $barcodeData = $generator->getBarcode($bookingNumber, $generator::TYPE_CODE_128, 2, 60);
+
+            $padding = 20;
+            $image = imagecreatefromstring($barcodeData);
+            $width = imagesx($image);
+            $height = imagesy($image);
+
+            $newWidth = $width + ($padding * 2);
+            $newHeight = $height + ($padding * 2);
+
+            $whiteImage = imagecreatetruecolor($newWidth, $newHeight);
+            $white = imagecolorallocate($whiteImage, 255, 255, 255);
+            imagefill($whiteImage, 0, 0, $white);
+
+            imagecopy($whiteImage, $image, $padding, $padding, 0, 0, $width, $height);
+
+            ob_start();
+            imagepng($whiteImage);
+            $finalBarcode = ob_get_clean();
+
+            imagedestroy($image);
+            imagedestroy($whiteImage);
+
+            $filename = 'barcodes/' . $bookingNumber . '.png';
+            Storage::disk('public')->put($filename, $finalBarcode);
+
             $booking = Booking::create([
                 'booking_number' => $bookingNumber,
+                'barcode' => $filename,
                 'user_id' => $user->id,
                 'vessel_id' => $vesselId,
                 'dock_location' => $request->dock_location,

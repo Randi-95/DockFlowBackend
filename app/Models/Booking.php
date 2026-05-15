@@ -10,6 +10,7 @@ class Booking extends Model
 {
     protected $fillable = [
         'booking_number',
+        'barcode',
         'user_id',
         'vessel_id',
         'dock_location',
