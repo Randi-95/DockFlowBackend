@@ -132,7 +132,6 @@ class BookingController extends Controller
 
             $vesselId = $request->vessel_id;
 
-            // Jika tidak ada vessel_id yang dikirim, tapi ada vessel_name, buat vessel baru
             if (empty($vesselId) && !empty($request->vessel_name)) {
                 $vessel = Vessel::firstOrCreate(['name' => $request->vessel_name]);
                 $vesselId = $vessel->id;
@@ -145,13 +144,11 @@ class BookingController extends Controller
                  ], 400);
             }
 
-            // Hitung total harga
             $totalPrice = 0;
             foreach ($request->items as $item) {
                 $totalPrice += ($item['price_at_booking'] * $item['qty']);
             }
 
-            // Generate Booking Number (contoh: BK-202310271234)
             $bookingNumber = 'BK-' . date('YmdHis') . rand(1000, 9999);
 
             $booking = Booking::create([
