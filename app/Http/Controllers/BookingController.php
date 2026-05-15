@@ -88,6 +88,8 @@ class BookingController extends Controller
                 'estimated_delivery_date' => $booking->estimated_delivery_date,
                 'total_estimated_price' => $booking->total_estimated_price,
                 'items_count' => $booking->bookingDetails->count(),
+                'barcode_url' => $booking->barcode ? asset('storage/' . $booking->barcode) : null,
+                'dock_location' => $booking->dock_location,
             ];
         });
 
