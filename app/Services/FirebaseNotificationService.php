@@ -5,18 +5,26 @@ namespace App\Services;
 use App\Models\DeviceToken;
 use App\Models\User;
 use Illuminate\Support\Str;
-use Kreait\Firebase\Messaging;
 use Kreait\Firebase\Messaging\CloudMessage;
 use Kreait\Firebase\Messaging\Notification as FirebaseNotification;
 use Illuminate\Support\Facades\Log;
+use Kreait\Firebase\Factory;
 
 class FirebaseNotificationService
 {
     protected $messaging;
 
-    public function __construct(Messaging $messaging)
+    public function __construct()
     {
-        $this->messaging = $messaging;
+        $filePath = storage_path('app/firebase-auth.json');
+
+        if (!file_exists($filePath)) {
+            Log::error("Setup Firebase Gagal: File JSON tidak ditemukan di " . $filePath);
+            throw new \Exception("File kunci Firebase tidak ditemukan di: " . $filePath);
+        }
+
+        $factory = (new Factory)->withServiceAccount($filePath);
+        $this->messaging = $factory->createMessaging();
     }
 
     /**
@@ -35,10 +43,10 @@ class FirebaseNotificationService
             ]);
 
             $tokens = DeviceToken::where('user_id', $user->id)->pluck('fcm_token')->toArray();
-            Log::info("Found " . count($tokens) . " tokens for user ID: " . $user->id);
+            Log::info("Mencari Token: Menemukan " . count($tokens) . " perangkat aktif untuk User ID: " . $user->id);
 
             if (empty($tokens)) {
-                Log::info("No FCM tokens found for user ID: {$user->id}");
+                Log::info("Pengiriman Dibatalkan: Tidak ada FCM token terdaftar untuk User ID: {$user->id}");
                 return;
             }
 
@@ -50,10 +58,10 @@ class FirebaseNotificationService
 
             $report = $this->messaging->sendMulticast($message, $tokens);
             
-            Log::info("FCM Notification sent to user ID: {$user->id}. Success: {$report->successes()->count()}, Failures: {$report->failures()->count()}");
+            Log::info("FCM Sukses Terkirim ke User ID: {$user->id}. Berhasil: {$report->successes()->count()}, Gagal: {$report->failures()->count()}");
 
         } catch (\Exception $e) {
-            Log::error("Error sending notification: " . $e->getMessage());
+            Log::error("Gagal mengeksekusi sendToUser: " . $e->getMessage());
         }
     }
 }
