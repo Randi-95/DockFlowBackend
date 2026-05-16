@@ -13,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(\GuzzleHttp\ClientInterface::class, \GuzzleHttp\Client::class);
     }
 
     /**
@@ -21,6 +21,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        \Log::info("AppServiceProvider boot called");
         Booking::observe(BookingObserver::class);
     }
 }

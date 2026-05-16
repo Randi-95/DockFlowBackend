@@ -14,9 +14,11 @@ class BookingObserver
         $this->notificationService = $notificationService;
     }
 
-    public function updated(Booking $booking): void
+    public function saved(Booking $booking): void
     {
-        if ($booking->isDirty('status')) {
+        \Log::info("Booking Observer triggered for booking #" . $booking->booking_number);
+        if ($booking->wasChanged('status')) {
+            \Log::info("Status changed to: " . $booking->status);
             $status = $booking->status;
             $title = "Update Status Booking";
             $body = $this->getNotificationBody($status, $booking->booking_number);

@@ -35,6 +35,7 @@ class FirebaseNotificationService
             ]);
 
             $tokens = DeviceToken::where('user_id', $user->id)->pluck('fcm_token')->toArray();
+            Log::info("Found " . count($tokens) . " tokens for user ID: " . $user->id);
 
             if (empty($tokens)) {
                 Log::info("No FCM tokens found for user ID: {$user->id}");
