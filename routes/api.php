@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BookingController;
@@ -31,6 +32,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Category
     Route::get('/categories', [CategoryController::class, 'getCategories']);
+
+    // Notifications
+    Route::post('/save-token', [NotificationController::class, 'saveToken']);
+    Route::post('/test-notification', [NotificationController::class, 'testSendNotification']);
 });
 
 Route::post('/login', [AuthController::class, 'login']);
