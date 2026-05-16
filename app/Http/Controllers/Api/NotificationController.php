@@ -59,4 +59,38 @@ class NotificationController extends Controller
             'failure_count' => $report->failures()->count()
         ]);
     }
+
+    public function index(Request $request)
+    {
+        $user = $request->user();
+        $notifications = $user->notifications()->latest()->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $notifications
+        ]);
+    }
+
+    public function markAsRead(Request $request, $id)
+    {
+        $user = $request->user();
+        $notification = $user->notifications()->findOrFail($id);
+        $notification->markAsRead();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Notification marked as read'
+        ]);
+    }
+
+    public function markAllAsRead(Request $request)
+    {
+        $user = $request->user();
+        $user->unreadNotifications->markAsRead();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'All notifications marked as read'
+        ]);
+    }
 }

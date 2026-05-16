@@ -34,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/categories', [CategoryController::class, 'getCategories']);
 
     // Notifications
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::post('/notifications/mark-as-read/{id}', [NotificationController::class, 'markAsRead']);
+    Route::post('/notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
     Route::post('/save-token', [NotificationController::class, 'saveToken']);
     Route::post('/test-notification', [NotificationController::class, 'testSendNotification']);
 });
