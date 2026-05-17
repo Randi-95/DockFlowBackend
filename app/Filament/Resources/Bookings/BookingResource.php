@@ -181,22 +181,37 @@ class BookingResource extends Resource
                         Placeholder::make('proof_preview')
                             ->label('Foto Bukti Pengiriman')
                             ->content(function () use ($record) {
+                                $darkStyle = '
+                                    <style>
+                                        .pod-empty-box { padding:24px;text-align:center;border-radius:8px;border:1px solid; color: rgb(239 68 68); background: rgb(254 242 242); border-color: rgb(254 202 202); }
+                                        .pod-hint { margin-top:10px;font-size:0.8rem;opacity:0.6; }
+                                        .pod-info-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px;border-radius:8px;font-size:0.875rem;border:1px solid; background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.08); }
+                                        .pod-info-label { font-size:0.75rem;opacity:0.55;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px; }
+                                        /* Filament uses Tailwind class-based dark mode: .dark on <html> */
+                                        .dark .pod-empty-box { color: rgb(252 165 165); background: rgba(69,10,10,0.5); border-color: rgba(127,29,29,0.5); }
+                                        .dark .pod-info-grid { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); }
+                                    </style>
+                                ';
+
                                 if (!$record->proof_of_delivery) {
                                     return new HtmlString(
-                                        '<div style="padding:24px;text-align:center;color:#ef4444;background:#fef2f2;border-radius:8px;border:1px solid #fecaca;">' .
+                                        $darkStyle .
+                                        '<div class="pod-empty-box">' .
                                         '<svg xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;margin:0 auto 8px;display:block;" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" /></svg>' .
-                                        '<strong>Belum ada bukti pengiriman yang diupload.</strong><br><small>Crew belum mengirimkan foto.</small></div>'
+                                        '<strong>Belum ada bukti pengiriman yang diupload.</strong><br><small>Crew belum mengirimkan foto.</small>' .
+                                        '</div>'
                                     );
                                 }
 
                                 $url = asset('storage/' . $record->proof_of_delivery);
                                 return new HtmlString(
+                                    $darkStyle .
                                     '<div style="text-align:center;">' .
                                     '<a href="' . $url . '" target="_blank" title="Klik untuk memperbesar">' .
                                     '<img src="' . $url . '" ' .
-                                    'style="max-width:100%;max-height:420px;border-radius:10px;border:2px solid #e5e7eb;box-shadow:0 4px 16px rgba(0,0,0,0.12);cursor:zoom-in;" />' .
+                                    'style="max-width:100%;max-height:420px;border-radius:10px;border:1px solid rgba(128,128,128,0.25);box-shadow:0 4px 20px rgba(0,0,0,0.2);cursor:zoom-in;" />' .
                                     '</a>' .
-                                    '<p style="margin-top:10px;font-size:0.8rem;color:#6b7280;">Klik gambar untuk membuka di tab baru</p>' .
+                                    '<p class="pod-hint">Klik gambar untuk membuka di tab baru</p>' .
                                     '</div>'
                                 );
                             }),
@@ -204,11 +219,11 @@ class BookingResource extends Resource
                         Placeholder::make('booking_info')
                             ->label('Informasi Booking')
                             ->content(fn () => new HtmlString(
-                                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px;background:#f9fafb;border-radius:8px;font-size:0.875rem;">' .
-                                '<div><strong style="color:#6b7280;">Nomor Booking</strong><br>' . e($record->booking_number) . '</div>' .
-                                '<div><strong style="color:#6b7280;">Customer</strong><br>' . e($record->user?->name ?? '-') . '</div>' .
-                                '<div><strong style="color:#6b7280;">Kapal</strong><br>' . e($record->vessel?->name ?? '-') . '</div>' .
-                                '<div><strong style="color:#6b7280;">Lokasi Dok</strong><br>' . e($record->dock_location ?? '-') . '</div>' .
+                                '<div class="pod-info-grid">' .
+                                '<div><div class="pod-info-label">Nomor Booking</div>' . e($record->booking_number) . '</div>' .
+                                '<div><div class="pod-info-label">Customer</div>' . e($record->user?->name ?? '-') . '</div>' .
+                                '<div><div class="pod-info-label">Kapal</div>' . e($record->vessel?->name ?? '-') . '</div>' .
+                                '<div><div class="pod-info-label">Lokasi Dok</div>' . e($record->dock_location ?? '-') . '</div>' .
                                 '</div>'
                             )),
                     ])
