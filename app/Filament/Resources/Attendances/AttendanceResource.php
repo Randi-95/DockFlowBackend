@@ -63,7 +63,13 @@ class AttendanceResource extends Resource
                     ->timezone('Asia/Jakarta')
                     ->sortable(),
                 TextColumn::make('status')
-                    ->badge(),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'present' => 'success',
+                        'late'    => 'warning',
+                        'absent'  => 'danger',
+                        default   => 'gray',
+                    }),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

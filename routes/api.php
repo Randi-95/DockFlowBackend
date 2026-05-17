@@ -23,6 +23,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/booking-active', [BookingController::class, 'getBookingActive']);
     Route::get('/booking-history', [BookingController::class, 'getHistory']);
     Route::post('/checkout', [BookingController::class, 'checkout']);
+    Route::post('/booking/{id}/upload-proof', [BookingController::class, 'uploadProofOfDelivery']);
 
     // Vessel
     Route::get('/vessels', [BookingController::class, 'getVessels']);

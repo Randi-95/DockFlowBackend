@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Picqer\Barcode\BarcodeGeneratorPNG;
+use Illuminate\Support\Str;
 
 class BookingController extends Controller
 {
@@ -90,6 +91,7 @@ class BookingController extends Controller
                 'items_count' => $booking->bookingDetails->count(),
                 'barcode_url' => $booking->barcode ? asset('storage/' . $booking->barcode) : null,
                 'dock_location' => $booking->dock_location,
+                'proof_of_delivery_url' => $booking->proof_of_delivery ? asset('storage/' . $booking->proof_of_delivery) : null,
                 'items' => $booking->bookingDetails->map(function($detail) {
                     return [
                         'product_name' => $detail->product->name,
@@ -225,6 +227,75 @@ class BookingController extends Controller
                 'status' => false,
                 'message' => 'Failed to process checkout. Please try again.',
                 'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+ 
+    public function uploadProofOfDelivery(Request $request, $id)
+    {
+        $user = $request->user();
+
+        if (!$user) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Unauthorized',
+            ], 401);
+        }
+
+        $booking = Booking::where('id', $id)
+            ->where('user_id', $user->id)
+            ->first();
+
+        if (!$booking) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Pesanan tidak ditemukan.',
+            ], 404);
+        }
+
+        if ($booking->status !== 'on_delivery') {
+            return response()->json([
+                'status' => false,
+                'message' => 'Bukti pengiriman hanya dapat diunggah saat pesanan berstatus "Dalam Pengiriman" (on_delivery).',
+            ], 422);
+        }
+
+        $request->validate([
+            'proof_of_delivery' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+        ]);
+
+        try {
+            if ($booking->proof_of_delivery) {
+                Storage::disk('public')->delete($booking->proof_of_delivery);
+            }
+
+            $file = $request->file('proof_of_delivery');
+            $filename = 'proof_of_delivery/' . $booking->booking_number . '_' . Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('proof_of_delivery', basename($filename), 'public');
+
+            $booking->update([
+                'proof_of_delivery' => $path,
+                'status'            => 'pending_completion',
+            ]);
+
+            return response()->json([
+                'status'  => true,
+                'message' => 'Bukti pengiriman berhasil diunggah. Menunggu konfirmasi admin untuk menyelesaikan pesanan.',
+                'data'    => [
+                    'booking_id'          => $booking->id,
+                    'booking_number'      => $booking->booking_number,
+                    'status'              => $booking->status,
+                    'proof_of_delivery_url' => asset('storage/' . $path),
+                ],
+            ], 200);
+
+        } catch (\Exception $e) {
+            Log::error('Upload Proof of Delivery Error: ' . $e->getMessage());
+            return response()->json([
+                'status'  => false,
+                'message' => 'Gagal mengunggah bukti pengiriman. Silakan coba lagi.',
+                'error'   => $e->getMessage(),
             ], 500);
         }
     }
