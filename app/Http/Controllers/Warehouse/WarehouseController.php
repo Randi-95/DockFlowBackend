@@ -136,6 +136,14 @@ class WarehouseController extends Controller
         }
     }
 
+    public function printThermal(Request $request, Booking $booking)
+    {
+        $user = $this->getWarehouseUser($request);
+        $booking->load(['user', 'vessel', 'bookingDetails.product']);
+
+        return view('warehouse.print-thermal', compact('booking', 'user'));
+    }
+
     public function handover(Request $request)
     {
         $user = $this->getWarehouseUser($request);

@@ -320,10 +320,18 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Packing Selesai!',
-                    text: 'Status pesanan telah berubah ke Diproses.',
-                    showConfirmButton: false,
-                    timer: 2000,
-                }).then(() => { window.location.href = data.redirect; });
+                    text: 'Status pesanan telah berubah ke Diproses. Silakan cetak Surat Jalan untuk crew.',
+                    showCancelButton: true,
+                    confirmButtonText: '🖨️ Cetak Surat Jalan',
+                    cancelButtonText: 'Kembali ke Antrean',
+                    confirmButtonColor: '#1565c0',
+                    cancelButtonColor: '#64748b',
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.open('{{ route("warehouse.packing.print-thermal", $booking->id) }}', '_blank');
+                    }
+                    window.location.href = data.redirect;
+                });
             } else {
                 Swal.fire({ icon: 'error', title: 'Gagal', text: data.message }).then(() => {
                     barcodeInput.focus();

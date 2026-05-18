@@ -31,6 +31,7 @@ Route::prefix('warehouse')->name('warehouse.')->group(function () {
         Route::get('/packing/{booking}', [WarehouseController::class, 'packingDetail'])->name('packing');
         Route::post('/packing/{booking}/scan', [WarehouseController::class, 'scanBarcode'])->name('packing.scan');
         Route::post('/packing/{booking}/complete', [WarehouseController::class, 'completePacking'])->name('packing.complete');
+        Route::get('/packing/{booking}/print-thermal', [WarehouseController::class, 'printThermal'])->name('packing.print-thermal');
         Route::get('/handover', [WarehouseController::class, 'handover'])->name('handover');
         Route::post('/handover/scan', [WarehouseController::class, 'scanBookingBarcode'])->name('handover.scan');
     });
