@@ -229,6 +229,9 @@
                     showConfirmButton: false,
                     timer: 3000,
                     timerProgressBar: true,
+                }).then(() => {
+                    barcodeInput.focus();
+                    lastScannedCode = '';
                 });
 
             } else {
@@ -240,10 +243,20 @@
                     showConfirmButton: false,
                     timer: 3500,
                     timerProgressBar: true,
+                }).then(() => {
+                    barcodeInput.focus();
+                    lastScannedCode = '';
                 });
             }
         } catch(err) {
-            Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Tidak dapat menghubungi server.' });
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Kesalahan Jaringan', 
+                text: 'Tidak dapat menghubungi server.' 
+            }).then(() => {
+                barcodeInput.focus();
+                lastScannedCode = '';
+            });
         }
     }
 
@@ -264,6 +277,8 @@
 
     let html5QrCode = null;
     let isCameraActive = false;
+    let lastScannedCode = '';
+    let scanCooldown = false;
 
     async function toggleCamera() {
         const btn = document.getElementById('toggleCameraBtn');
@@ -310,8 +325,8 @@
             }
 
             isCameraActive = true;
-            let lastScannedCode = '';
-            let scanCooldown = false;
+            lastScannedCode = '';
+            scanCooldown = false;
 
             html5QrCode.start(
                 { facingMode: "environment" },
@@ -360,6 +375,8 @@
                     icon: 'error',
                     title: 'Kamera Gagal',
                     text: 'Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.',
+                }).then(() => {
+                    barcodeInput.focus();
                 });
                 console.error("Gagal menjalankan scanner", err);
             });

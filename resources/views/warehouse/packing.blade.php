@@ -297,7 +297,10 @@
             confirmButtonColor: '#22c55e',
         });
 
-        if (!confirm.isConfirmed) return;
+        if (!confirm.isConfirmed) {
+            barcodeInput.focus();
+            return;
+        }
 
         try {
             Swal.fire({ title: 'Memproses...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
@@ -322,10 +325,18 @@
                     timer: 2000,
                 }).then(() => { window.location.href = data.redirect; });
             } else {
-                Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
+                Swal.fire({ icon: 'error', title: 'Gagal', text: data.message }).then(() => {
+                    barcodeInput.focus();
+                });
             }
         } catch (err) {
-            Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Tidak dapat menghubungi server.' });
+            Swal.fire({ 
+                icon: 'error', 
+                title: 'Kesalahan Jaringan', 
+                text: 'Tidak dapat menghubungi server.' 
+            }).then(() => {
+                barcodeInput.focus();
+            });
         }
     });
 
