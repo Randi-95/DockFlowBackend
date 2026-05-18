@@ -286,14 +286,98 @@ class BookingResource extends Resource
                         }
                     }),
 
-                Action::make('confirm')
-                    ->label('Confirm')
-                    ->color('success')
-                    ->icon('heroicon-o-check-circle')
-                    ->requiresConfirmation()
-                    ->modalHeading('Konfirmasi Pesanan')
-                    ->modalDescription('Pesanan akan dikonfirmasi dan stok produk akan otomatis dikurangi. Tindakan ini tidak dapat dikembalikan ke Menunggu.')
+                Action::make('review_items')
+                    ->label('Review Barang')
+                    ->color('primary')
+                    ->icon('heroicon-o-clipboard-document-list')
+                    ->modalHeading('Review Detail Barang')
+                    ->modalDescription(fn (Booking $record) => 'Booking #' . $record->booking_number . ' — Tinjau detail barang di bawah ini sebelum mengonfirmasi pesanan.')
+                    ->modalWidth('4xl')
+                    ->modalSubmitActionLabel('✔ Konfirmasi & Kurangi Stok')
+                    ->modalCancelActionLabel('Batal')
                     ->visible(fn (Booking $record) => $record->status === 'waiting')
+                    ->form(fn (Booking $record) => [
+                        Placeholder::make('items_review')
+                            ->label('Daftar Barang')
+                            ->content(function () use ($record) {
+                                $styles = '
+                                    <style>
+                                        .review-table { width:100%; border-collapse:collapse; font-size:0.875rem; border-radius:8px; overflow:hidden; }
+                                        .review-table th { text-align:left; padding:10px; font-weight:600; background: rgba(0,0,0,0.04); }
+                                        .review-table td { padding:10px; border-bottom:1px solid rgba(0,0,0,0.05); }
+                                        .review-table tr:last-child td { border-bottom:none; }
+                                        .review-info-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:14px; border-radius:8px; font-size:0.875rem; border:1px solid rgba(0,0,0,0.08); background: rgba(0,0,0,0.04); margin-bottom:15px; }
+                                        .review-info-label { font-size:0.75rem; opacity:0.55; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px; }
+                                        .review-total { text-align:right; font-weight:bold; font-size:1rem; color: #1565C0; padding-top:10px; }
+                                        
+                                        .dark .review-table th { background: rgba(255,255,255,0.05); }
+                                        .dark .review-table td { border-bottom-color: rgba(255,255,255,0.05); }
+                                        .dark .review-info-grid { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.08); }
+                                        .dark .review-total { color: #42a5f5; }
+                                    </style>
+                                ';
+
+                                $infoGrid = '
+                                    <div class="review-info-grid">
+                                        <div><div class="review-info-label">Customer</div>' . e($record->user?->name ?? '-') . '</div>
+                                        <div><div class="review-info-label">Kapal</div>' . e($record->vessel?->name ?? '-') . '</div>
+                                        <div><div class="review-info-label">Lokasi Dok</div>' . e($record->dock_location ?? '-') . '</div>
+                                        <div><div class="review-info-label">Tgl Estimasi Pengiriman</div>' . e(\Carbon\Carbon::parse($record->estimated_delivery_date)->format('d M Y H:i')) . '</div>
+                                    </div>
+                                ';
+
+                                if ($record->bookingDetails->isEmpty()) {
+                                    return new HtmlString($styles . $infoGrid . '<div style="padding:15px; text-align:center; color:red;">Tidak ada barang dalam pesanan ini.</div>');
+                                }
+
+                                $rows = '';
+                                foreach ($record->bookingDetails as $detail) {
+                                    $product = $detail->product;
+                                    $name = $product ? $product->name : 'Produk tidak ditemukan';
+                                    $sku = $product ? $product->sku_code : '—';
+                                    $rack = $product ? $product->rack_location : '—';
+                                    $qty = $detail->qty;
+                                    $unit = $product ? $product->unit : 'unit';
+                                    $price = number_format($detail->price_at_booking, 0, ',', '.');
+                                    $subtotal = number_format($detail->price_at_booking * $qty, 0, ',', '.');
+
+                                    $rows .= "
+                                        <tr>
+                                            <td>
+                                                <div style='font-weight:600;'>{$name}</div>
+                                                <div style='font-size:0.75rem; opacity:0.6;'>SKU: {$sku} | Rak: {$rack}</div>
+                                            </td>
+                                            <td>{$qty} {$unit}</td>
+                                            <td style='text-align:right;'>Rp {$price}</td>
+                                            <td style='text-align:right; font-weight:600;'>Rp {$subtotal}</td>
+                                        </tr>
+                                    ";
+                                }
+
+                                $grandTotal = number_format($record->total_estimated_price, 0, ',', '.');
+
+                                $table = "
+                                    <table class='review-table'>
+                                        <thead>
+                                            <tr>
+                                                <th>Nama Barang</th>
+                                                <th>Qty</th>
+                                                <th style='text-align:right;'>Harga</th>
+                                                <th style='text-align:right;'>Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {$rows}
+                                        </tbody>
+                                    </table>
+                                    <div class='review-total'>
+                                        Total Estimasi: Rp {$grandTotal}
+                                    </div>
+                                ";
+
+                                return new HtmlString($styles . $infoGrid . $table);
+                            })
+                    ])
                     ->action(function (Booking $record) {
                         try {
                             $record->update(['status' => 'confirmed']);
