@@ -2,6 +2,16 @@
 
 @section('title', 'Serah Terima')
 
+@push('styles')
+<style>
+    #reader video {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div class="min-h-[calc(100vh-65px)] flex items-center justify-center p-6 relative overflow-hidden">
 
@@ -27,26 +37,38 @@
 
         <div class="bg-white border border-blue-100 rounded-3xl shadow-soft overflow-hidden">
 
-            <div class="bg-gray-900 relative h-52 flex items-center justify-center overflow-hidden" id="scannerArea">
-                <div class="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-blue-400 rounded-tl-sm"></div>
-                <div class="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-blue-400 rounded-tr-sm"></div>
-                <div class="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-blue-400 rounded-bl-sm"></div>
-                <div class="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-blue-400 rounded-br-sm"></div>
-                <div class="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent scan-line opacity-80"></div>
+            <div class="bg-gray-900 relative h-64 flex items-center justify-center overflow-hidden" id="scannerArea">
+                <div id="reader" class="absolute inset-0 w-full h-full hidden"></div>
+                <div class="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-blue-400 rounded-tl-sm z-10"></div>
+                <div class="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-blue-400 rounded-tr-sm z-10"></div>
+                <div class="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-blue-400 rounded-bl-sm z-10"></div>
+                <div class="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-blue-400 rounded-br-sm z-10"></div>
+                <div id="scanLaser" class="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent scan-line opacity-80 z-10 hidden"></div>
 
-                <div class="flex gap-0.5 items-center opacity-30">
+                <div id="placeholderBars" class="flex gap-0.5 items-center opacity-30">
                     @php $heights = [40,28,48,32,52,24,44,36,52,28,44,32,48,28,44,36,52,24,48,32,52,28,44]; @endphp
                     @foreach($heights as $h)
                     <div class="bg-white/80 rounded-sm" style="width: 3px; height: {{ $h }}px"></div>
                     @endforeach
                 </div>
 
-                <div id="scannerOverlay" class="absolute inset-0 flex items-center justify-center hidden">
+                <div id="scannerOverlay" class="absolute inset-0 flex items-center justify-center hidden z-20">
                     <div id="overlayContent"></div>
                 </div>
             </div>
 
             <div class="p-6">
+                <div class="flex justify-center mb-6">
+                    <button id="toggleCameraBtn" onclick="toggleCamera()"
+                            class="px-5 py-2.5 bg-primary hover:bg-primaryDark text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2 2v-11a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                            <circle cx="12" cy="13" r="4"/>
+                        </svg>
+                        <span>Aktifkan Kamera</span>
+                    </button>
+                </div>
+
                 <div class="relative mb-5">
                     <label class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-2">
                         Input Barcode Resi
@@ -135,22 +157,25 @@
 </div>
 
 @push('scripts')
+<script src="https://unpkg.com/html5-qrcode"></script>
 <script>
     const barcodeInput = document.getElementById('bookingBarcodeInput');
     const resultCard   = document.getElementById('resultCard');
     const scannerArea  = document.getElementById('scannerArea');
 
     document.addEventListener('click', (e) => {
-        if (e.target.closest('[data-sim]')) return;
+        if (e.target.closest('[data-sim]') || e.target.closest('#toggleCameraBtn')) return;
         barcodeInput.focus();
     });
     barcodeInput.focus();
 
-    barcodeInput.addEventListener('keypress', async function(e) {
-        if (e.key !== 'Enter') return;
-        const barcode = this.value.trim();
+    async function processBarcode(barcode) {
         if (!barcode) return;
-        this.value = '';
+
+        const flash = document.createElement('div');
+        flash.className = 'absolute inset-0 bg-green-500/20 z-30 transition-opacity duration-300 animate-pulse';
+        scannerArea.appendChild(flash);
+        setTimeout(() => flash.remove(), 600);
 
         try {
             const res = await fetch('{{ route("warehouse.handover.scan") }}', {
@@ -210,15 +235,149 @@
         } catch(err) {
             Swal.fire({ icon: 'error', title: 'Kesalahan Jaringan', text: 'Tidak dapat menghubungi server.' });
         }
+    }
+
+    barcodeInput.addEventListener('keypress', function(e) {
+        if (e.key !== 'Enter') return;
+        const barcode = this.value.trim();
+        if (!barcode) return;
+        this.value = '';
+        processBarcode(barcode);
     });
 
     function simulateHandover() {
         const val = document.getElementById('simBookingInput').value.trim();
         if (!val) return;
         document.getElementById('simBookingInput').value = '';
-        const input = document.getElementById('bookingBarcodeInput');
-        input.value = val;
-        input.dispatchEvent(new KeyboardEvent('keypress', { key: 'Enter', bubbles: true }));
+        processBarcode(val);
+    }
+
+    let html5QrCode = null;
+    let isCameraActive = false;
+
+    async function toggleCamera() {
+        const btn = document.getElementById('toggleCameraBtn');
+        const reader = document.getElementById('reader');
+        const laser = document.getElementById('scanLaser');
+        const bars = document.getElementById('placeholderBars');
+
+        if (isCameraActive) {
+            if (html5QrCode) {
+                try {
+                    await html5QrCode.stop();
+                } catch (err) {
+                    console.error("Gagal mematikan kamera", err);
+                }
+            }
+            isCameraActive = false;
+            reader.classList.add('hidden');
+            laser.classList.add('hidden');
+            bars.classList.remove('hidden');
+
+            btn.className = "px-5 py-2.5 bg-primary hover:bg-primaryDark text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2";
+            btn.innerHTML = `
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                    <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Aktifkan Kamera</span>
+            `;
+        } else {
+            reader.classList.remove('hidden');
+            laser.classList.remove('hidden');
+            bars.classList.add('hidden');
+
+            btn.className = "px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2";
+            btn.innerHTML = `
+                <svg class="w-5 h-5 animate-pulse" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/>
+                </svg>
+                <span>Matikan Kamera</span>
+            `;
+
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("reader");
+            }
+
+            isCameraActive = true;
+            let lastScannedCode = '';
+            let scanCooldown = false;
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 12,
+                    qrbox: function(width, height) {
+                        return { width: Math.min(width * 0.85, 280), height: Math.min(height * 0.55, 140) };
+                    },
+                    aspectRatio: 1.777778
+                },
+                (decodedText) => {
+                    if (scanCooldown) return;
+                    if (decodedText === lastScannedCode) {
+                        return;
+                    }
+
+                    lastScannedCode = decodedText;
+                    scanCooldown = true;
+                    setTimeout(() => { scanCooldown = false; }, 3000);
+
+                    playBeep();
+
+                    if (navigator.vibrate) {
+                        navigator.vibrate(150);
+                    }
+
+                    processBarcode(decodedText);
+                },
+                (errorMessage) => {
+                }
+            ).catch(err => {
+                isCameraActive = false;
+                reader.classList.add('hidden');
+                laser.classList.add('hidden');
+                bars.classList.remove('hidden');
+
+                btn.className = "px-5 py-2.5 bg-primary hover:bg-primaryDark text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2";
+                btn.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                        <circle cx="12" cy="13" r="4"/>
+                    </svg>
+                    <span>Aktifkan Kamera</span>
+                `;
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kamera Gagal',
+                    text: 'Tidak dapat mengakses kamera. Pastikan izin kamera telah diberikan.',
+                });
+                console.error("Gagal menjalankan scanner", err);
+            });
+        }
+    }
+
+    function playBeep() {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const fontGain = audioCtx.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+            fontGain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+            oscillator.connect(fontGain);
+            fontGain.connect(audioCtx.destination);
+
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+                audioCtx.close();
+            }, 100);
+        } catch (e) {
+            console.warn("Audio Context not allowed or supported yet.", e);
+        }
     }
 </script>
 @endpush

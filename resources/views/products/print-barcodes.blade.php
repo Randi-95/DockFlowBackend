@@ -68,19 +68,42 @@
             background: #1d4ed8;
         }
         @media print {
+            @page {
+                size: auto;
+                margin: 0;
+            }
             body { 
                 padding: 0; 
                 background: white;
+                margin: 0;
             }
             .container {
                 box-shadow: none;
                 padding: 0;
+                max-width: none;
+                margin: 0;
+                width: 100%;
             }
             .no-print { 
                 display: none !important; 
             }
+            .grid {
+                display: block !important;
+                gap: 0;
+            }
             .card { 
-                border: 1px dashed #ccc; 
+                border: none !important; 
+                margin: 0;
+                padding: 15px;
+                page-break-after: always;
+                page-break-inside: avoid;
+                break-after: page;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .card:last-child {
+                page-break-after: avoid;
+                break-after: avoid;
             }
         }
     </style>
@@ -108,7 +131,6 @@
     </div>
 
     <script>
-        // Automatically open print dialog when the page loads
         window.onload = function() {
             setTimeout(() => {
                 window.print();
