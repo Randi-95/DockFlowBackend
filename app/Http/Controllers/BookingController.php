@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Picqer\Barcode\BarcodeGeneratorPNG;
+use chillerlan\QRCode\QRCode;
+use chillerlan\QRCode\QROptions;
+use chillerlan\QRCode\Output\QRGdImagePNG;
 use Illuminate\Support\Str;
 
 class BookingController extends Controller
@@ -165,32 +168,16 @@ class BookingController extends Controller
 
             $bookingNumber = 'BK-' . date('YmdHis') . rand(1000, 9999);
 
-            $generator = new BarcodeGeneratorPNG();
-            $barcodeData = $generator->getBarcode($bookingNumber, $generator::TYPE_CODE_128, 2, 60);
-
-            $padding = 20;
-            $image = imagecreatefromstring($barcodeData);
-            $width = imagesx($image);
-            $height = imagesy($image);
-
-            $newWidth = $width + ($padding * 2);
-            $newHeight = $height + ($padding * 2);
-
-            $whiteImage = imagecreatetruecolor($newWidth, $newHeight);
-            $white = imagecolorallocate($whiteImage, 255, 255, 255);
-            imagefill($whiteImage, 0, 0, $white);
-
-            imagecopy($whiteImage, $image, $padding, $padding, 0, 0, $width, $height);
-
-            ob_start();
-            imagepng($whiteImage);
-            $finalBarcode = ob_get_clean();
-
-            imagedestroy($image);
-            imagedestroy($whiteImage);
+            $options = new QROptions([
+                'outputInterface' => QRGdImagePNG::class,
+                'outputBase64'    => false,
+                'scale'           => 8,
+            ]);
+            $qrcode = new QRCode($options);
+            $qrData = $qrcode->render($bookingNumber);
 
             $filename = 'barcodes/' . $bookingNumber . '.png';
-            Storage::disk('public')->put($filename, $finalBarcode);
+            Storage::disk('public')->put($filename, $qrData);
 
             $booking = Booking::create([
                 'booking_number' => $bookingNumber,
