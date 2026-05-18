@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
-use chillerlan\QRCode\Output\QRGdImagePNG;
+use chillerlan\QRCode\Output\QROutputInterface;
 use Illuminate\Support\Str;
 
 class BookingController extends Controller
@@ -169,9 +169,9 @@ class BookingController extends Controller
             $bookingNumber = 'BK-' . date('YmdHis') . rand(1000, 9999);
 
             $options = new QROptions([
-                'outputInterface' => QRGdImagePNG::class,
-                'outputBase64'    => false,
-                'scale'           => 8,
+                'outputType'   => QROutputInterface::GDIMAGE_PNG,
+                'outputBase64' => false,
+                'scale'        => 8,
             ]);
             $qrcode = new QRCode($options);
             $qrData = $qrcode->render($bookingNumber);
