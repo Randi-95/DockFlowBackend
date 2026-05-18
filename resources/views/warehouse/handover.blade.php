@@ -9,6 +9,9 @@
         height: 100% !important;
         object-fit: cover !important;
     }
+    .scanner-mask {
+        box-shadow: 0 0 0 9999px rgba(15, 23, 42, 0.65);
+    }
 </style>
 @endpush
 
@@ -31,28 +34,35 @@
                 <div class="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
                 Loket Serah Terima
             </div>
-            <h2 class="text-3xl font-extrabold text-textDark mb-2">Scan Barcode Resi</h2>
-            <p class="text-textMuted">Arahkan scanner ke barcode resi pesanan untuk memindahkan tanggung jawab ke kru lapangan</p>
+            <h2 class="text-3xl font-extrabold text-textDark mb-2">Scan QR Code Resi</h2>
+            <p class="text-textMuted">Arahkan kamera ke QR Code pesanan untuk memindahkan tanggung jawab ke kru lapangan</p>
         </div>
 
         <div class="bg-white border border-blue-100 rounded-3xl shadow-soft overflow-hidden">
 
-            <div class="bg-gray-900 relative h-64 flex items-center justify-center overflow-hidden" id="scannerArea">
+            <div class="bg-gray-900 relative h-80 flex items-center justify-center overflow-hidden rounded-t-3xl" id="scannerArea">
                 <div id="reader" class="absolute inset-0 w-full h-full hidden"></div>
-                <div class="absolute top-4 left-4 w-8 h-8 border-t-2 border-l-2 border-blue-400 rounded-tl-sm z-10"></div>
-                <div class="absolute top-4 right-4 w-8 h-8 border-t-2 border-r-2 border-blue-400 rounded-tr-sm z-10"></div>
-                <div class="absolute bottom-4 left-4 w-8 h-8 border-b-2 border-l-2 border-blue-400 rounded-bl-sm z-10"></div>
-                <div class="absolute bottom-4 right-4 w-8 h-8 border-b-2 border-r-2 border-blue-400 rounded-br-sm z-10"></div>
-                <div id="scanLaser" class="absolute inset-x-0 h-0.5 bg-gradient-to-r from-transparent via-blue-400 to-transparent scan-line opacity-80 z-10 hidden"></div>
+                
+                <div id="scannerBox" class="relative w-60 h-60 flex items-center justify-center z-10 scanner-mask rounded-3xl transition-all duration-300">
+                    <div class="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-xl z-20"></div>
+                    <div class="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-xl z-20"></div>
+                    <div class="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-xl z-20"></div>
+                    <div class="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-xl z-20"></div>
 
-                <div id="placeholderBars" class="flex gap-0.5 items-center opacity-30">
-                    @php $heights = [40,28,48,32,52,24,44,36,52,28,44,32,48,28,44,36,52,24,48,32,52,28,44]; @endphp
-                    @foreach($heights as $h)
-                    <div class="bg-white/80 rounded-sm" style="width: 3px; height: {{ $h }}px"></div>
-                    @endforeach
+                    <div id="scanLaser" class="absolute inset-x-3 h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent scan-line opacity-90 z-20 hidden"></div>
+
+                    <div id="placeholderQR" class="flex flex-col items-center gap-3 text-white/40 select-none transition-all duration-300">
+                        <svg width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="animate-pulse">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 3h6v6H3V3zm0 12h6v6H3v-6zm12-12h6v6h-6V3zm3 12h3v3h-3v-3zm-3 3h3v3h-3v-3zm0-3h-3v-3h3v3zm-3 3h-3v-3h3v3zm-3-3H9v-3h3v3zm3-3h-3V9h3v3zm3-3h3v3h-3V9z"/>
+                            <rect x="5" y="5" width="2" height="2" fill="currentColor"/>
+                            <rect x="5" y="17" width="2" height="2" fill="currentColor"/>
+                            <rect x="17" y="5" width="2" height="2" fill="currentColor"/>
+                        </svg>
+                        <span class="text-[10px] font-bold uppercase tracking-wider text-white/50">Kamera Nonaktif</span>
+                    </div>
                 </div>
 
-                <div id="scannerOverlay" class="absolute inset-0 flex items-center justify-center hidden z-20">
+                <div id="scannerOverlay" class="absolute inset-0 flex items-center justify-center hidden z-30">
                     <div id="overlayContent"></div>
                 </div>
             </div>
@@ -71,10 +81,10 @@
 
                 <div class="relative mb-5">
                     <label class="block text-xs font-semibold text-textMuted uppercase tracking-wider mb-2">
-                        Input Barcode Resi
+                        Input QR Code / No. Pesanan
                     </label>
                     <input type="text" id="bookingBarcodeInput" autofocus autocomplete="off"
-                           placeholder="Scan atau ketik nomor resi (BK-...)..."
+                           placeholder="Scan atau ketik nomor pesanan (BK-...)..."
                            class="w-full border-2 border-blue-200 focus:border-primary rounded-xl px-4 py-3.5 text-base font-mono
                                   placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all bg-blue-50/20">
                     <div class="absolute right-4 top-1/2 translate-y-1/4 text-blue-200">
@@ -259,7 +269,7 @@
         const btn = document.getElementById('toggleCameraBtn');
         const reader = document.getElementById('reader');
         const laser = document.getElementById('scanLaser');
-        const bars = document.getElementById('placeholderBars');
+        const placeholderQR = document.getElementById('placeholderQR');
 
         if (isCameraActive) {
             if (html5QrCode) {
@@ -272,7 +282,7 @@
             isCameraActive = false;
             reader.classList.add('hidden');
             laser.classList.add('hidden');
-            bars.classList.remove('hidden');
+            placeholderQR.classList.remove('hidden');
 
             btn.className = "px-5 py-2.5 bg-primary hover:bg-primaryDark text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2";
             btn.innerHTML = `
@@ -285,7 +295,7 @@
         } else {
             reader.classList.remove('hidden');
             laser.classList.remove('hidden');
-            bars.classList.add('hidden');
+            placeholderQR.classList.add('hidden');
 
             btn.className = "px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2";
             btn.innerHTML = `
@@ -307,10 +317,9 @@
                 { facingMode: "environment" },
                 {
                     fps: 12,
-                    qrbox: function(width, height) {
-                        return { width: Math.min(width * 0.85, 280), height: Math.min(height * 0.55, 140) };
-                    },
-                    aspectRatio: 1.777778
+                    qrbox: { width: 240, height: 240 },
+                    aspectRatio: 1.0,
+                    formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
                 },
                 (decodedText) => {
                     if (scanCooldown) return;
@@ -336,7 +345,7 @@
                 isCameraActive = false;
                 reader.classList.add('hidden');
                 laser.classList.add('hidden');
-                bars.classList.remove('hidden');
+                placeholderQR.classList.remove('hidden');
 
                 btn.className = "px-5 py-2.5 bg-primary hover:bg-primaryDark text-white font-bold text-sm rounded-xl transition-all active:scale-95 shadow-md flex items-center gap-2";
                 btn.innerHTML = `
